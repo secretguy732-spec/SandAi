@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SandAI — Build Websites with AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════════
+   ROOT & RESET
+════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Palette: Navy deep + crisp white + electric red */
+  --navy:      #0a0f2e;
+  --navy2:     #0d1340;
+  --navy3:     #111850;
+  --blue:      #1a56db;
+  --blue2:     #2563eb;
+  --blue-light:#60a5fa;
+  --blue-glow: rgba(26,86,219,0.35);
+  --red:       #e5173f;
+  --red2:      #ff2d55;
+  --red-glow:  rgba(229,23,63,0.25);
+  --white:     #ffffff;
+  --white90:   rgba(255,255,255,0.9);
+  --white60:   rgba(255,255,255,0.6);
+  --white30:   rgba(255,255,255,0.3);
+  --white10:   rgba(255,255,255,0.1);
+  --white06:   rgba(255,255,255,0.06);
+  --white03:   rgba(255,255,255,0.03);
+  --border:    rgba(255,255,255,0.08);
+  --border2:   rgba(255,255,255,0.15);
+  --green:     #00d68f;
+  --r:         16px;
+  --rsm:       10px;
+  --shadow:    0 24px 64px rgba(0,0,0,0.5);
+}
+
+html,body{
+  height:100%;
+  font-family:'Onest',sans-serif;
+  background:var(--navy);
+  color:var(--white);
+  overflow-x:hidden;
+}
+::selection{background:var(--blue);color:#fff}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--white30);border-radius:10px}
+
+/* GRAIN TEXTURE */
+body::after{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.03;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* SCREENS */
+.screen{display:none;position:relative;z-index:1;min-height:100vh}
+.screen.active{display:flex}
+
+/* ════════════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════════════ */
+#toastBox{
+  position:fixed;bottom:28px;right:28px;z-index:9999;
+  display:flex;flex-direction:column;gap:10px;pointer-events:none;
+}
+.toast{
+  padding:13px 18px;border-radius:12px;
+  background:rgba(10,15,46,0.95);
+  border:1px solid var(--border2);
+  backdrop-filter:blur(20px);
+  font-size:.84rem;font-weight:500;
+  display:flex;align-items:center;gap:10px;
+  max-width:310px;pointer-events:all;
+  box-shadow:0 16px 40px rgba(0,0,0,.6);
+  animation:tslide .28s cubic-bezier(.22,1,.36,1);
+  transition:opacity .25s;
+}
+@keyframes tslide{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.toast.success .t-icon{color:var(--green)}
+.toast.error   .t-icon{color:var(--red2)}
+.t-icon{font-size:1rem;flex-shrink:0}
+
+/* ════════════════════════════════════════════════════
+   LANDING SCREEN
+════════════════════════════════════════════════════ */
+#landingScreen{
+  flex-direction:column;align-items:center;justify-content:center;
+  overflow:hidden;
+  background:
+    radial-gradient(ellipse 80% 55% at 20% -5%,  rgba(26,86,219,.35),transparent),
+    radial-gradient(ellipse 60% 45% at 90% 100%, rgba(229,23,63,.2), transparent),
+    radial-gradient(ellipse 100% 80% at 50% 50%, rgba(13,19,64,1),transparent),
+    var(--navy);
+}
+
+/* Animated mesh lines */
+.land-grid{
+  position:absolute;inset:0;overflow:hidden;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:60px 60px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black,transparent);
+}
+.land-glow-a{
+  position:absolute;width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(26,86,219,.3),transparent 70%);
+  top:-200px;left:-150px;animation:ga 12s ease-in-out infinite;
+}
+.land-glow-b{
+  position:absolute;width:500px;height:500px;border-radius:50%;
+  background:radial-gradient(circle,rgba(229,23,63,.2),transparent 70%);
+  bottom:-180px;right:-100px;animation:gb 15s ease-in-out infinite;
+}
+.land-glow-c{
+  position:absolute;width:300px;height:300px;border-radius:50%;
+  background:radial-gradient(circle,rgba(96,165,250,.15),transparent 70%);
+  top:40%;left:60%;animation:gc 10s ease-in-out infinite;
+}
+@keyframes ga{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(60px,40px) scale(1.1)}}
+@keyframes gb{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-50px,-30px) scale(1.08)}}
+@keyframes gc{0%,100%{transform:translate(0,0)}50%{transform:translate(-40px,20px)}}
+
+/* HERO CONTENT */
+.land-wrap{
+  position:relative;z-index:2;
+  text-align:center;padding:20px;max-width:760px;
+  animation:heroIn .8s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes heroIn{from{opacity:0;transform:translateY(36px)}to{opacity:1;transform:translateY(0)}}
+
+.land-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:7px 18px;
+  background:linear-gradient(135deg,rgba(26,86,219,.2),rgba(229,23,63,.1));
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:50px;
+  font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--blue-light);
+  margin-bottom:32px;
+  backdrop-filter:blur(10px);
+}
+.live-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 10px var(--green);
+  animation:livepulse 1.8s ease-in-out infinite;
+}
+@keyframes livepulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
+
+.land-title{
+  font-weight:900;
+  font-size:clamp(3.2rem,8vw,6.5rem);
+  line-height:.98;
+  letter-spacing:-3px;
+  margin-bottom:24px;
+}
+.title-sand{
+  display:block;
+  background:linear-gradient(135deg,#ffffff 0%,#e0eaff 40%,#93c5fd 70%,#60a5fa 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.title-ai{
+  display:block;
+  background:linear-gradient(135deg,var(--red) 0%,var(--red2) 50%,#ff6b6b 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+
+.land-sub{
+  font-size:1.15rem;color:var(--white60);
+  line-height:1.75;margin-bottom:44px;
+  max-width:520px;margin-left:auto;margin-right:auto;
+  font-weight:400;
+}
+.land-sub strong{color:var(--white90);font-weight:600}
+
+/* GOOGLE BTN */
+.btn-goog{
+  display:inline-flex;align-items:center;justify-content:center;gap:14px;
+  padding:17px 36px;border-radius:14px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.14);
+  color:var(--white);
+  font-family:'Onest',sans-serif;font-size:1rem;font-weight:600;
+  cursor:pointer;backdrop-filter:blur(20px);
+  transition:all .22s cubic-bezier(.22,1,.36,1);
+  position:relative;overflow:hidden;
+}
+.btn-goog::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(26,86,219,.15),rgba(229,23,63,.08));
+  opacity:0;transition:opacity .22s;
+}
+.btn-goog:hover{
+  background:rgba(255,255,255,.1);
+  border-color:rgba(255,255,255,.25);
+  transform:translateY(-2px);
+  box-shadow:0 16px 40px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.08);
+}
+.btn-goog:hover::before{opacity:1}
+.btn-goog:disabled{opacity:.55;cursor:not-allowed;transform:none}
+
+/* FEATURE PILLS */
+.land-pills{display:flex;gap:10px;margin-top:36px;flex-wrap:wrap;justify-content:center}
+.pill{
+  padding:8px 16px;
+  background:var(--white06);
+  border:1px solid var(--border);
+  border-radius:50px;
+  font-size:.78rem;font-weight:500;
+  color:var(--white60);
+  display:flex;align-items:center;gap:6px;
+}
+.pill-dot{width:5px;height:5px;border-radius:50%}
+.pill-dot.blue{background:var(--blue-light)}
+.pill-dot.red{background:var(--red2)}
+.pill-dot.green{background:var(--green)}
+.pill-dot.white{background:var(--white60)}
+
+/* BOTTOM STRIP on landing */
+.land-strip{
+  position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--blue),var(--red),var(--blue-light),var(--red2));
+  background-size:300% 100%;
+  animation:stripAnim 4s linear infinite;
+}
+@keyframes stripAnim{0%{background-position:0%}100%{background-position:300%}}
+
+/* ════════════════════════════════════════════════════
+   SHARED TOPNAV
+════════════════════════════════════════════════════ */
+.topnav{
+  position:sticky;top:0;z-index:500;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;height:64px;
+  background:rgba(10,15,46,.88);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(24px);
+  flex-shrink:0;width:100%;
+}
+.nav-brand{
+  display:flex;align-items:center;gap:10px;
+  font-weight:800;font-size:1.35rem;letter-spacing:-.5px;
+}
+.nav-brand-sand{color:var(--white)}
+.nav-brand-ai{color:var(--red2)}
+.nav-brand-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--red));
+  box-shadow:0 0 8px rgba(26,86,219,.5);
+}
+.nav-right{display:flex;align-items:center;gap:10px}
+.user-chip{
+  display:flex;align-items:center;gap:9px;
+  padding:5px 14px 5px 5px;
+  background:var(--white06);border:1px solid var(--border);
+  border-radius:50px;
+}
+.uav{
+  width:30px;height:30px;border-radius:50%;overflow:hidden;
+  flex-shrink:0;background:linear-gradient(135deg,var(--blue),var(--red));
+  display:flex;align-items:center;justify-content:center;
+  font-size:.72rem;font-weight:700;
+}
+.uav img{width:100%;height:100%;object-fit:cover;display:block}
+.uname{font-size:.82rem;font-weight:600;color:var(--white90)}
+.btn-nav{
+  padding:8px 16px;border-radius:9px;
+  font-size:.82rem;font-weight:600;
+  cursor:pointer;font-family:'Onest',sans-serif;
+  border:1px solid var(--border);
+  background:transparent;color:var(--white60);
+  transition:all .18s;
+}
+.btn-nav:hover{color:var(--white);border-color:var(--border2)}
+.btn-nav.prim{
+  background:linear-gradient(135deg,var(--blue) 0%,#1e40af 100%);
+  border-color:transparent;color:#fff;
+  box-shadow:0 4px 16px rgba(26,86,219,.35);
+}
+.btn-nav.prim:hover{box-shadow:0 6px 24px rgba(26,86,219,.5);transform:translateY(-1px)}
+
+/* ════════════════════════════════════════════════════
+   DASHBOARD SCREEN
+════════════════════════════════════════════════════ */
+#dashboardScreen{flex-direction:column;background:var(--navy)}
+.dash-body{
+  flex:1;padding:36px 32px;
+  max-width:1280px;margin:0 auto;width:100%;
+}
+
+/* HERO GREETING */
+.dash-greeting{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  margin-bottom:32px;gap:20px;flex-wrap:wrap;
+}
+.dash-greeting-left h1{
+  font-size:2rem;font-weight:800;letter-spacing:-.5px;
+  margin-bottom:6px;
+}
+.dash-greeting-left h1 span{
+  background:linear-gradient(135deg,var(--blue-light),var(--white));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.dash-greeting-left p{color:var(--white60);font-size:.95rem}
+.dash-greeting-right{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 16px;
+  background:var(--white06);border:1px solid var(--border);
+  border-radius:10px;font-size:.78rem;color:var(--white60);
+  flex-shrink:0;
+}
+.dash-greeting-right b{color:var(--green);font-weight:700}
+
+/* 2-COL LAYOUT */
+.dash-grid{display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start}
+
+/* LEFT COLUMN */
+.dash-left{}
+
+/* PROMPT CARD */
+.prompt-card{
+  background:var(--white03);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:28px;
+  margin-bottom:24px;
+  position:relative;overflow:hidden;
+}
+.prompt-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--blue),var(--red),var(--blue-light));
+}
+.prompt-card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:18px;flex-wrap:wrap;gap:10px;
+}
+.pcard-title{font-weight:700;font-size:1.05rem}
+.pcard-title span{
+  background:linear-gradient(135deg,var(--blue-light),var(--red2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.model-tabs{display:flex;background:var(--navy2);border-radius:10px;padding:3px;gap:3px}
+.mtab{
+  padding:7px 16px;border-radius:8px;border:none;
+  background:transparent;color:var(--white60);
+  font-family:'Onest',sans-serif;font-size:.8rem;font-weight:600;
+  cursor:pointer;transition:all .18s;
+}
+.mtab.on{
+  background:linear-gradient(135deg,var(--blue),#1e40af);
+  color:#fff;box-shadow:0 2px 10px rgba(26,86,219,.4);
+}
+.mtab-red.on{
+  background:linear-gradient(135deg,var(--red),#c81032);
+}
+
+.prompt-textarea{
+  width:100%;background:var(--navy2);
+  border:1px solid var(--border);border-radius:14px;
+  padding:16px 18px;color:var(--white);
+  font-family:'Onest',sans-serif;font-size:.95rem;
+  resize:none;min-height:130px;line-height:1.7;
+  outline:none;transition:border-color .18s,box-shadow .18s;
+}
+.prompt-textarea::placeholder{color:var(--white30)}
+.prompt-textarea:focus{border-color:rgba(26,86,219,.5);box-shadow:0 0 0 3px rgba(26,86,219,.12)}
+
+.prompt-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:14px;gap:12px;flex-wrap:wrap;
+}
+.pfhint{font-size:.76rem;color:var(--white30)}
+.pfhint kbd{
+  display:inline-block;padding:2px 7px;border-radius:5px;
+  background:var(--navy2);border:1px solid var(--border2);
+  font-size:.7rem;font-family:'JetBrains Mono',monospace;
+}
+.btn-gen{
+  padding:13px 28px;border:none;border-radius:12px;
+  background:linear-gradient(135deg,var(--blue) 0%,#1e40af 50%,#1a1fb5 100%);
+  color:#fff;font-family:'Onest',sans-serif;font-size:.95rem;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;gap:9px;
+  box-shadow:0 6px 24px rgba(26,86,219,.4);
+  transition:all .2s;position:relative;overflow:hidden;
+}
+.btn-gen::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(229,23,63,.2),transparent);
+  opacity:0;transition:opacity .2s;
+}
+.btn-gen:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(26,86,219,.55)}
+.btn-gen:hover::after{opacity:1}
+.btn-gen:disabled{opacity:.55;cursor:not-allowed;transform:none}
+
+/* PROJECTS */
+.projects-section{}
+.sec-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;
+}
+.sec-title{font-weight:700;font-size:1rem;color:var(--white90)}
+.sec-count{
+  font-size:.76rem;color:var(--white30);
+  font-family:'JetBrains Mono',monospace;
+}
+.proj-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+  gap:14px;
+}
+.proj-card{
+  background:var(--white03);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;
+  transition:all .2s cubic-bezier(.22,1,.36,1);
+  cursor:pointer;
+}
+.proj-card:hover{
+  border-color:rgba(26,86,219,.35);
+  transform:translateY(-3px);
+  box-shadow:0 20px 50px rgba(0,0,0,.5),0 0 0 1px rgba(26,86,219,.2);
+}
+.pthumb{
+  height:90px;
+  background:linear-gradient(135deg,rgba(26,86,219,.25),rgba(229,23,63,.15));
+  display:flex;align-items:center;justify-content:center;
+  font-size:2.2rem;position:relative;overflow:hidden;
+}
+.pthumb::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to bottom,transparent 50%,rgba(10,15,46,.6));
+}
+.pbody{padding:14px}
+.pname{font-weight:700;font-size:.88rem;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ptext{font-size:.74rem;color:var(--white30);margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.45}
+.pmeta{font-size:.7rem;color:var(--white30);margin-bottom:10px;font-family:'JetBrains Mono',monospace}
+.pbtns{display:flex;gap:6px}
+.pbtn{
+  padding:5px 11px;border-radius:7px;
+  border:1px solid var(--border);background:transparent;
+  color:var(--white60);font-size:.74rem;font-weight:500;
+  cursor:pointer;font-family:'Onest',sans-serif;transition:all .18s;
+}
+.pbtn:hover{border-color:var(--blue);color:var(--blue-light)}
+.empty-state{
+  grid-column:1/-1;text-align:center;padding:56px 20px;
+  background:var(--white03);border:1px dashed var(--border);
+  border-radius:16px;
+}
+.eico{font-size:2.5rem;margin-bottom:14px;opacity:.25;display:block}
+.empty-state h3{font-weight:700;font-size:1rem;margin-bottom:6px;color:var(--white60)}
+.empty-state p{color:var(--white30);font-size:.84rem}
+
+/* RIGHT COLUMN */
+.dash-right{}
+
+/* KEY CARD */
+.key-card{
+  background:linear-gradient(160deg,rgba(26,86,219,.18) 0%,rgba(229,23,63,.08) 100%);
+  border:1px solid rgba(26,86,219,.25);
+  border-radius:20px;padding:24px;margin-bottom:20px;
+  position:relative;overflow:hidden;
+}
+.key-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,var(--blue),rgba(26,86,219,0));
+}
+.key-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.key-label{
+  font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--blue-light);
+}
+.key-plan{
+  padding:3px 10px;border-radius:20px;
+  background:rgba(26,86,219,.2);border:1px solid rgba(26,86,219,.3);
+  font-size:.68rem;font-weight:600;color:var(--blue-light);
+}
+.key-val{
+  background:var(--navy);border:1px solid var(--border);
+  border-radius:11px;padding:11px 14px;
+  display:flex;align-items:center;gap:10px;margin-bottom:14px;
+}
+.key-text{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.78rem;color:var(--blue-light);flex:1;word-break:break-all;
+}
+.btn-copy{
+  padding:5px 12px;border-radius:7px;
+  border:1px solid rgba(26,86,219,.3);
+  background:rgba(26,86,219,.12);
+  color:var(--blue-light);font-size:.72rem;font-weight:600;
+  cursor:pointer;font-family:'Onest',sans-serif;
+  white-space:nowrap;transition:all .18s;
+}
+.btn-copy:hover{background:rgba(26,86,219,.25)}
+.key-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ks{
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:10px;padding:11px 8px;text-align:center;
+}
+.ks-v{font-weight:800;font-size:1.3rem;color:var(--white)}
+.ks-l{font-size:.68rem;color:var(--white30);margin-top:2px}
+
+/* STATS MINI */
+.stats-mini{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
+.smc{
+  background:var(--white03);border:1px solid var(--border);
+  border-radius:14px;padding:16px;
+}
+.smc-v{font-weight:800;font-size:1.5rem}
+.smc-v.blue{color:var(--blue-light)}
+.smc-v.red{color:var(--red2)}
+.smc-l{font-size:.72rem;color:var(--white30);margin-top:3px}
+
+/* AI STATUS CARD */
+.ai-status-card{
+  background:var(--white03);border:1px solid var(--border);
+  border-radius:16px;padding:20px;
+}
+.ai-status-title{font-weight:700;font-size:.88rem;margin-bottom:14px;color:var(--white60)}
+.ai-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 0;
+  border-bottom:1px solid var(--border);
+}
+.ai-item:last-child{border-bottom:none;padding-bottom:0}
+.ai-item-left{display:flex;align-items:center;gap:10px}
+.ai-model-icon{
+  width:32px;height:32px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;
+}
+.ai-model-icon.cl{background:rgba(229,23,63,.15);border:1px solid rgba(229,23,63,.2)}
+.ai-model-icon.gp{background:rgba(26,86,219,.15);border:1px solid rgba(26,86,219,.2)}
+.ai-name{font-weight:600;font-size:.82rem}
+.ai-desc{font-size:.7rem;color:var(--white30)}
+.ai-badge{
+  padding:3px 10px;border-radius:20px;font-size:.68rem;font-weight:700;
+}
+.ai-badge.on{background:rgba(0,214,143,.12);border:1px solid rgba(0,214,143,.25);color:var(--green)}
+.ai-badge.off{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--white30)}
+
+/* ════════════════════════════════════════════════════
+   BUILDER SCREEN
+════════════════════════════════════════════════════ */
+#builderScreen{flex-direction:column;background:var(--navy)}
+.builder-body{
+  flex:1;display:grid;
+  grid-template-columns:420px 1fr;
+  height:calc(100vh - 64px);
+  overflow:hidden;
+}
+
+/* LEFT PANEL */
+.bl{
+  display:flex;flex-direction:column;
+  border-right:1px solid var(--border);
+  background:var(--navy2);overflow:hidden;
+}
+.bl-top{
+  padding:20px 20px 0;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.bl-title{font-weight:700;font-size:.94rem;margin-bottom:4px}
+.bl-sub{font-size:.74rem;color:var(--white30);padding-bottom:14px}
+.bl-prompt{
+  margin:0;padding:14px 20px;
+  background:rgba(26,86,219,.06);
+  border-bottom:1px solid var(--border);
+  font-size:.78rem;color:var(--white60);
+  font-style:italic;line-height:1.55;
+  flex-shrink:0;
+}
+.bl-model-pill{
+  margin:12px 20px;
+  display:inline-flex;align-items:center;gap:7px;
+  padding:5px 14px;
+  background:rgba(26,86,219,.12);border:1px solid rgba(26,86,219,.25);
+  border-radius:20px;font-size:.74rem;color:var(--blue-light);font-weight:600;
+  width:fit-content;flex-shrink:0;
+}
+
+/* PROGRESS */
+.bl-progress{padding:14px 20px;flex-shrink:0}
+.bl-prog-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.bl-prog-status{font-size:.78rem;color:var(--white60)}
+.bl-prog-pct{font-size:.72rem;font-family:'JetBrains Mono',monospace;color:var(--blue-light)}
+.prog-bar{height:3px;background:var(--navy);border-radius:10px;overflow:hidden}
+.prog-fill{height:100%;border-radius:10px;width:0;transition:width .4s ease;
+  background:linear-gradient(90deg,var(--blue),var(--red2),var(--blue-light))}
+
+/* CODE STREAM */
+.code-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.code-header{
+  padding:9px 20px;
+  background:var(--navy);
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;
+  flex-shrink:0;
+}
+.code-fname{font-size:.7rem;color:var(--white30);font-family:'JetBrains Mono',monospace}
+.code-chars{font-size:.7rem;color:var(--blue-light);font-family:'JetBrains Mono',monospace}
+#streamOut{
+  flex:1;overflow-y:auto;
+  padding:14px 20px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.67rem;line-height:1.65;
+  color:rgba(96,165,250,.65);
+  white-space:pre-wrap;word-break:break-all;
+  background:var(--navy);
+}
+
+/* ACTIONS */
+.bl-acts{
+  padding:14px 20px;border-top:1px solid var(--border);
+  display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0;
+}
+.abt{
+  flex:1;min-width:80px;padding:10px 12px;border-radius:10px;
+  font-size:.78rem;font-weight:600;cursor:pointer;
+  font-family:'Onest',sans-serif;
+  border:1px solid var(--border);background:transparent;
+  color:var(--white60);transition:all .18s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.abt:hover{border-color:var(--border2);color:var(--white)}
+.abt.vw{
+  background:linear-gradient(135deg,var(--red) 0%,#c81032 100%);
+  border-color:transparent;color:#fff;
+  box-shadow:0 4px 16px rgba(229,23,63,.35);
+}
+.abt.vw:hover{box-shadow:0 6px 24px rgba(229,23,63,.5);transform:translateY(-1px)}
+
+/* RIGHT PANEL — LIVE PREVIEW */
+.br{display:flex;flex-direction:column;background:#f0f0f0;overflow:hidden}
+.pv-bar{
+  padding:12px 20px;background:var(--navy2);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.pv-dots{display:flex;gap:6px}
+.pvd{width:11px;height:11px;border-radius:50%}
+.pvd.r{background:#ff5f57}.pvd.y{background:#febc2e}.pvd.g{background:#28c840}
+.pv-label{font-size:.73rem;color:var(--white30);font-family:'JetBrains Mono',monospace}
+.pv-wrap{flex:1;overflow:hidden}
+#liveFrame{width:100%;height:100%;border:none;background:#fff}
+
+/* ════════════════════════════════════════════════════
+   VIEWWEB MODAL
+════════════════════════════════════════════════════ */
+#vwModal{
+  position:fixed;inset:0;z-index:5000;
+  background:rgba(4,6,20,.9);
+  display:none;flex-direction:column;
+  backdrop-filter:blur(12px);
+}
+#vwModal.on{display:flex}
+.vw-bar{
+  padding:12px 20px;background:var(--navy2);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+  flex-shrink:0;
+}
+.vw-dots{display:flex;gap:5px}
+.vwdot{width:11px;height:11px;border-radius:50%;cursor:pointer;transition:opacity .15s}
+.vwdot:hover{opacity:.7}
+.vwdot.r{background:#ff5f57}.vwdot.y{background:#febc2e}.vwdot.g{background:#28c840}
+.vw-info{flex:1;overflow:hidden}
+.vw-name{font-size:.85rem;font-weight:700}
+.vw-sub{font-size:.72rem;color:var(--white30);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vw-acts{display:flex;gap:8px;flex-shrink:0}
+.vwbtn{
+  padding:7px 16px;border-radius:9px;font-size:.8rem;font-weight:600;
+  cursor:pointer;font-family:'Onest',sans-serif;
+  border:1px solid var(--border);background:transparent;
+  color:var(--white60);transition:all .18s;
+}
+.vwbtn:hover{color:var(--white);border-color:var(--border2)}
+.vwbtn.dl{
+  background:linear-gradient(135deg,var(--blue),#1e40af);
+  border-color:transparent;color:#fff;
+  box-shadow:0 4px 14px rgba(26,86,219,.35);
+}
+#vwFrame{width:100%;flex:1;border:none}
+
+/* ════════════════════════════════════════════════════
+   SPINNER
+════════════════════════════════════════════════════ */
+.spin{
+  display:inline-block;width:13px;height:13px;
+  border:2px solid rgba(255,255,255,.25);border-top-color:#fff;
+  border-radius:50%;animation:sp .55s linear infinite;
+  vertical-align:middle;margin-right:5px;
+}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ════════════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════════════ */
+@media(max-width:1100px){
+  .dash-grid{grid-template-columns:1fr}
+  .dash-right{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .ai-status-card{grid-column:1/-1}
+}
+@media(max-width:960px){
+  .builder-body{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
+  .bl{border-right:none;border-bottom:1px solid var(--border);max-height:50vh}
+}
+@media(max-width:640px){
+  .topnav{padding:0 16px}
+  .uname{display:none}
+  .dash-body{padding:20px 16px}
+  .dash-right{grid-template-columns:1fr}
+  .land-pills{flex-direction:column;align-items:center}
+  .key-stats{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="toastBox"></div>
+
+<!-- ═══════════════════════════════════════════
+     LANDING
+═══════════════════════════════════════════ -->
+<div class="screen" id="landingScreen">
+  <div class="land-grid"></div>
+  <div class="land-glow-a"></div>
+  <div class="land-glow-b"></div>
+  <div class="land-glow-c"></div>
+
+  <div class="land-wrap">
+    <div class="land-eyebrow">
+      <span class="live-dot"></span>
+      AI Website Builder · Powered by Claude &amp; GPT-4o
+    </div>
+
+    <h1 class="land-title">
+      <span class="title-sand">Sand</span>
+      <span class="title-ai">AI</span>
+    </h1>
+
+    <p class="land-sub">
+      Deskripsikan website impianmu — <strong>SandAI</strong> akan generate HTML
+      yang indah, responsif &amp; siap pakai secara <strong>real-time</strong> dengan AI terbaik.
+    </p>
+
+    <button class="btn-goog" id="googleBtn" onclick="APP.googleSignIn()">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Masuk dengan Google
+    </button>
+
+    <div class="land-pills">
+      <div class="pill"><span class="pill-dot blue"></span> Real AI Generation</div>
+      <div class="pill"><span class="pill-dot red"></span> Streaming Real-time</div>
+      <div class="pill"><span class="pill-dot green"></span> API Key Sendiri</div>
+      <div class="pill"><span class="pill-dot white"></span> ViewWeb Preview</div>
+    </div>
+  </div>
+
+  <div class="land-strip"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     DASHBOARD
+═══════════════════════════════════════════ -->
+<div class="screen" id="dashboardScreen">
+  <nav class="topnav">
+    <div class="nav-brand">
+      <div class="nav-brand-dot"></div>
+      <span class="nav-brand-sand">Sand</span><span class="nav-brand-ai">AI</span>
+    </div>
+    <div class="nav-right">
+      <button class="btn-nav prim" onclick="APP.goBuilder()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:5px"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+        New Website
+      </button>
+      <div class="user-chip">
+        <div class="uav" id="uAv"><img id="uImg" src="" alt="" style="display:none"></div>
+        <span class="uname" id="uName"></span>
+      </div>
+      <button class="btn-nav" onclick="APP.signOut()">Keluar</button>
+    </div>
+  </nav>
+
+  <div class="dash-body">
+    <!-- GREETING -->
+    <div class="dash-greeting">
+      <div class="dash-greeting-left">
+        <h1>Halo, <span id="greetName">Kamu</span>! 👋</h1>
+        <p id="greetSub">Apa yang ingin kamu bangun hari ini?</p>
+      </div>
+      <div class="dash-greeting-right">
+        Status: <b>Online</b> &nbsp;·&nbsp; SandAI v1.0
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <!-- LEFT -->
+      <div class="dash-left">
+        <!-- PROMPT CARD -->
+        <div class="prompt-card">
+          <div class="prompt-card-header">
+            <div class="pcard-title">✦ <span>Generate Website Baru</span></div>
+            <div class="model-tabs">
+              <button class="mtab on" onclick="APP.setModel('claude',this)">Claude</button>
+              <button class="mtab mtab-red" onclick="APP.setModel('openai',this)">GPT-4o</button>
+            </div>
+          </div>
+          <textarea class="prompt-textarea" id="promptIn"
+            placeholder="Deskripsikan website kamu dengan detail...
+
+Contoh: 'Website klinik kecantikan modern bernama Glow Clinic, dengan warna rose gold dan putih, fitur booking konsultasi online, galeri hasil treatment, testimoni pasien, dan nuansa premium & elegan'
+
+Semakin detail prompt = hasil semakin menakjubkan ✨"></textarea>
+          <div class="prompt-footer">
+            <span class="pfhint">Tekan <kbd>Ctrl</kbd> + <kbd>Enter</kbd> untuk generate</span>
+            <button class="btn-gen" id="genBtn" onclick="APP.generate()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Generate Website
+            </button>
+          </div>
+        </div>
+
+        <!-- PROJECTS -->
+        <div class="projects-section">
+          <div class="sec-header">
+            <span class="sec-title">Projects Kamu</span>
+            <span class="sec-count" id="projCount">0 projects</span>
+          </div>
+          <div class="proj-grid" id="projGrid"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="dash-right">
+        <!-- KEY CARD -->
+        <div class="key-card">
+          <div class="key-card-top">
+            <span class="key-label">🔑 SandAI API Key</span>
+            <span class="key-plan">Free Plan</span>
+          </div>
+          <div class="key-val">
+            <span class="key-text" id="keyTxt">Memuat...</span>
+            <button class="btn-copy" onclick="APP.copyKey()">Salin</button>
+          </div>
+          <div class="key-stats">
+            <div class="ks"><div class="ks-v" id="kUsed">0</div><div class="ks-l">Digunakan</div></div>
+            <div class="ks"><div class="ks-v" id="kLimit">500</div><div class="ks-l">Limit</div></div>
+            <div class="ks"><div class="ks-v" id="kLeft">500</div><div class="ks-l">Sisa</div></div>
+          </div>
+        </div>
+
+        <!-- STATS MINI -->
+        <div class="stats-mini">
+          <div class="smc">
+            <div class="smc-v blue" id="stProj">0</div>
+            <div class="smc-l">Total Projects</div>
+          </div>
+          <div class="smc">
+            <div class="smc-v red" id="stReq">0</div>
+            <div class="smc-l">API Requests</div>
+          </div>
+        </div>
+
+        <!-- AI STATUS -->
+        <div class="ai-status-card">
+          <div class="ai-status-title">Model Tersedia</div>
+          <div class="ai-item">
+            <div class="ai-item-left">
+              <div class="ai-model-icon cl">🤖</div>
+              <div>
+                <div class="ai-name">Claude Opus</div>
+                <div class="ai-desc">Anthropic · Best for coding</div>
+              </div>
+            </div>
+            <span class="ai-badge on">Aktif</span>
+          </div>
+          <div class="ai-item">
+            <div class="ai-item-left">
+              <div class="ai-model-icon gp">⚡</div>
+              <div>
+                <div class="ai-name">GPT-4o</div>
+                <div class="ai-desc">OpenAI · Creative design</div>
+              </div>
+            </div>
+            <span class="ai-badge on">Aktif</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     BUILDER
+═══════════════════════════════════════════ -->
+<div class="screen" id="builderScreen">
+  <nav class="topnav">
+    <div class="nav-brand">
+      <div class="nav-brand-dot"></div>
+      <span class="nav-brand-sand">Sand</span><span class="nav-brand-ai">AI</span>
+    </div>
+    <div class="nav-right">
+      <span style="font-size:.78rem;color:var(--white30)">Model:&nbsp;<b id="mInd" style="color:var(--blue-light)">Claude</b></span>
+      <button class="btn-nav" onclick="APP.show('dashboardScreen')">← Dashboard</button>
+      <button class="btn-nav" onclick="APP.signOut()">Keluar</button>
+    </div>
+  </nav>
+
+  <div class="builder-body">
+    <!-- LEFT: stream -->
+    <div class="bl">
+      <div class="bl-top">
+        <div class="bl-title">⚡ AI Generation Stream</div>
+        <div class="bl-sub">Kode HTML ditulis AI secara real-time di hadapanmu</div>
+      </div>
+      <div class="bl-prompt"><span id="bPr" style="color:var(--white60)">Menunggu prompt...</span></div>
+      <div class="bl-model-pill">🤖 <span id="bMd">Claude Opus</span></div>
+
+      <div class="bl-progress">
+        <div class="bl-prog-row">
+          <span class="bl-prog-status" id="bStat">Siap generate...</span>
+          <span class="bl-prog-pct" id="bPct">0%</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" id="bFill"></div></div>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-header">
+          <span class="code-fname">output.html</span>
+          <span class="code-chars" id="cChars">0 chars</span>
+        </div>
+        <pre id="streamOut"></pre>
+      </div>
+
+      <div class="bl-acts">
+        <button class="abt vw" id="vwBtn" onclick="APP.openViewWeb()" style="display:none;">
+          👁 ViewWeb
+        </button>
+        <button class="abt" onclick="APP.dlCurrent()">⬇ Download</button>
+        <button class="abt" onclick="APP.show('dashboardScreen')">← Kembali</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: preview -->
+    <div class="br">
+      <div class="pv-bar">
+        <div class="pv-dots">
+          <div class="pvd r"></div><div class="pvd y"></div><div class="pvd g"></div>
+        </div>
+        <span class="pv-label">Live Preview — update real-time saat AI menulis</span>
+      </div>
+      <div class="pv-wrap">
+        <iframe id="liveFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     VIEWWEB MODAL
+═══════════════════════════════════════════ -->
+<div id="vwModal">
+  <div class="vw-bar">
+    <div class="vw-dots">
+      <div class="vwdot r" onclick="APP.closeVW()"></div>
+      <div class="vwdot y"></div><div class="vwdot g"></div>
+    </div>
+    <div class="vw-info">
+      <div class="vw-name" id="vwN">Preview</div>
+      <div class="vw-sub" id="vwS"></div>
+    </div>
+    <div class="vw-acts">
+      <button class="vwbtn dl" onclick="APP.dlCurrent()">⬇ Download HTML</button>
+      <button class="vwbtn" onclick="APP.closeVW()">✕ Tutup</button>
+    </div>
+  </div>
+  <iframe id="vwFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     FIREBASE + APP LOGIC
+═══════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut as fbOut }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, orderBy, serverTimestamp }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+/* ── CONFIG ── */
+const BACKEND = 'https://soraaai-backend-production.up.railway.app';
+const FBCFG = {
+  apiKey:'AIzaSyDAObpfVGA9TN4W4xo-MeQvTFwykwRy6sY',
+  authDomain:'bionapp-db8f6.firebaseapp.com',
+  projectId:'bionapp-db8f6',
+  storageBucket:'bionapp-db8f6.firebasestorage.app',
+  messagingSenderId:'683646666202',
+  appId:'1:683646666202:web:fadad0d6611d0d05ffece3'
+};
+
+const fbApp = initializeApp(FBCFG);
+const auth  = getAuth(fbApp);
+const db    = getFirestore(fbApp);
+const gPr   = new GoogleAuthProvider();
+gPr.setCustomParameters({prompt:'select_account'});
+
+/* ── STATE ── */
+const S = {
+  user:null,key:null,ki:null,model:'claude',
+  projs:[],html:'',prompt:'',busy:false
+};
+
+/* ── UTILS ── */
+const $   = id => document.getElementById(id);
+const st  = (id,v) => { const e=$(id); if(e) e.textContent=v; };
+const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function toast(msg, type='success'){
+  const d=document.createElement('div');
+  d.className=`toast ${type}`;
+  d.innerHTML=`<span class="t-icon">${type==='success'?'✓':'✕'}</span><span>${msg}</span>`;
+  $('toastBox').appendChild(d);
+  setTimeout(()=>{ d.style.opacity='0'; setTimeout(()=>d.remove(),280); },3500);
+}
+
+function dl(name,html){
+  const a=Object.assign(document.createElement('a'),{
+    href:URL.createObjectURL(new Blob([html],{type:'text/html'})),
+    download:(name||'sandai-website').toLowerCase().replace(/\s+/g,'-')+'.html'
+  });
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+function emo(p){
+  p=(p||'').toLowerCase();
+  if(/restaurant|cafe|kopi|food|makan|resto|warung/.test(p)) return'🍽️';
+  if(/shop|toko|store|ecomm|jual|belanja|fashion/.test(p)) return'🛍️';
+  if(/portfolio|personal|porto|freelance/.test(p)) return'✨';
+  if(/saas|app|software|aplikasi|startup|tech/.test(p)) return'⚡';
+  if(/agency|studio|kreatif|creative|design/.test(p)) return'🎨';
+  if(/blog|news|artikel|mag|media/.test(p)) return'📖';
+  if(/klinik|dokter|health|sehat|med|clinic|beauty/.test(p)) return'💎';
+  if(/hotel|villa|travel|wisata|tour/.test(p)) return'🏨';
+  return'🌐';
+}
+
+/* ── SCREEN ── */
+function show(id){
+  ['landingScreen','dashboardScreen','builderScreen'].forEach(s=>{
+    document.getElementById(s)?.classList.toggle('active',s===id);
+  });
+}
+
+/* ── AUTH ── */
+onAuthStateChanged(auth, async u=>{
+  if(u){ S.user=u; await login(u); }
+  else { S.user=null; show('landingScreen'); }
+}, ()=>show('landingScreen'));
+
+async function login(u){
+  // ─── ALWAYS request key from backend (backend is in-memory, resets on redeploy)
+  // Firestore hanya sebagai cache tampilan, validasi tetap dari backend
+  let key=null;
+
+  // Step 1: Coba ambil dari Firestore dulu (cek dua collection)
+  try{
+    let sn=await getDoc(doc(db,'sandai_users',u.uid));
+    if(sn.exists()) key=sn.data().sandKey||sn.data().soraaKey||null;
+    if(!key){
+      sn=await getDoc(doc(db,'soraaai_users',u.uid));
+      if(sn.exists()) key=sn.data().soraaKey||sn.data().sandKey||null;
+    }
+  }catch(e){console.warn('FS read:',e.message);}
+
+  // Step 2: Validasi key ke backend (backend mungkin sudah restart = key hilang)
+  // Kalau key tidak valid di backend, paksa buat baru
+  if(key){
+    try{
+      const r=await fetch(`${BACKEND}/api/keys/info`,{headers:{'X-SoraaAI-Key':key}});
+      if(!r.ok){ console.warn('Key invalid di backend, buat baru...'); key=null; }
+      else{ const d=await r.json(); S.ki=d.data; }
+    }catch(e){ console.warn('Backend check:', e.message); }
+  }
+
+  // Step 3: Buat key baru jika tidak ada atau tidak valid
+  if(!key){
+    try{
+      const r=await fetch(`${BACKEND}/api/keys/create`,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({uid:u.uid,name:u.displayName||'User',email:u.email||''})
+      });
+      if(r.ok){
+        const d=await r.json();
+        key=d.api_key;
+        // Ambil info key yang baru
+        try{
+          const r2=await fetch(`${BACKEND}/api/keys/info`,{headers:{'X-SoraaAI-Key':key}});
+          if(r2.ok){const d2=await r2.json();S.ki=d2.data;}
+        }catch(_){}
+      } else {
+        console.warn('Backend create key failed:', r.status);
+      }
+    }catch(e){console.warn('Backend unreachable:',e.message);}
+
+    // Simpan key ke Firestore (kedua collection supaya kompatibel)
+    if(key){
+      const kd={sandKey:key,soraaKey:key,displayName:u.displayName||'',email:u.email||'',photoURL:u.photoURL||'',updatedAt:serverTimestamp()};
+      try{ await setDoc(doc(db,'sandai_users',u.uid),kd,{merge:true}); }catch(e){}
+      try{ await setDoc(doc(db,'soraaai_users',u.uid),kd,{merge:true}); }catch(e){}
+    }
+  }
+
+  S.key=key;
+
+  // Step 4: Load projects (cek kedua collection)
+  try{
+    let snap=null;
+    try{ snap=await getDocs(query(collection(db,'sandai_users',u.uid,'projects'),orderBy('createdAt','desc'))); }catch(_){}
+    if(!snap||snap.empty){
+      try{ snap=await getDocs(query(collection(db,'soraaai_users',u.uid,'projects'),orderBy('createdAt','desc'))); }catch(_){}
+    }
+    S.projs=snap?snap.docs.map(d=>({id:d.id,...d.data()})):[];
+  }catch(e){S.projs=[];console.warn('PJ:',e.message);}
+
+  fillDash(u);
+  show('dashboardScreen');
+}
+
+function fillDash(u){
+  const h=new Date().getHours();
+  const fn=(u.displayName||'Kamu').split(' ')[0];
+  st('greetName',fn);
+  st('greetSub',`${h<12?'Selamat pagi':h<18?'Selamat siang':'Selamat malam'}! Apa yang ingin kamu bangun?`);
+  st('uName',fn);
+
+  const img=$('uImg'), av=$('uAv');
+  if(u.photoURL){
+    img.src=u.photoURL; img.style.display='block';
+    av.style.background='none';
+  } else {
+    img.style.display='none';
+    av.textContent=fn[0].toUpperCase();
+    av.style.cssText='display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#1a56db,#e5173f);font-size:.72rem;font-weight:700;';
+  }
+
+  const ki=S.ki;
+  if(S.key){
+    st('keyTxt',S.key);
+    st('kUsed', ki?.requests_used      ?? 0);
+    st('kLimit',ki?.requests_limit     ?? 500);
+    st('kLeft', ki?.requests_remaining ?? 500);
+    st('stReq', ki?.requests_used      ?? 0);
+  } else {
+    const kt=$('keyTxt');
+    if(kt){kt.textContent='Backend belum tersambung';kt.style.color='#ff2d55';}
+  }
+  st('stProj',S.projs.length);
+  st('projCount',S.projs.length+' projects');
+  renderProjs();
+}
+
+function renderProjs(){
+  const g=$('projGrid'); if(!g) return;
+  if(!S.projs.length){
+    g.innerHTML=`<div class="empty-state"><span class="eico">✦</span><h3>Belum ada project</h3><p>Generate website pertama kamu di atas!</p></div>`;
+    return;
+  }
+  g.innerHTML=S.projs.map(p=>`
+    <div class="proj-card">
+      <div class="pthumb">${p.emoji||'🌐'}</div>
+      <div class="pbody">
+        <div class="pname">${esc(p.name)}</div>
+        <div class="ptext">${esc(p.prompt||'')}</div>
+        <div class="pmeta">${(p.model||'AI').toUpperCase()} · ${p.createdAt?.toDate?p.createdAt.toDate().toLocaleDateString('id'):'Baru saja'}</div>
+        <div class="pbtns">
+          <button class="pbtn" onclick="APP.viewProj('${p.id}')">👁 View</button>
+          <button class="pbtn" onclick="APP.dlProj('${p.id}')">⬇ Download</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+/* ── GENERATE ── */
+async function generate(){
+  if(S.busy) return;
+  const prompt=$('promptIn')?.value?.trim();
+  if(!prompt){toast('Tulis deskripsi website dulu!','error');return;}
+  if(!S.key){toast('API key belum ada. Coba logout & login ulang.','error');return;}
+
+  S.busy=true; S.html=''; S.prompt=prompt;
+  show('builderScreen');
+
+  $('streamOut').textContent='';
+  $('bFill').style.width='0%';
+  st('bStat','Menghubungkan ke AI...');
+  st('bPct','0%');
+  $('vwBtn').style.display='none';
+  $('liveFrame').srcdoc='';
+  st('bPr',prompt);
+  const ml=S.model==='claude'?'Claude Opus':'GPT-4o';
+  st('bMd','✦ '+ml); st('mInd',S.model==='claude'?'Claude':'GPT-4o');
+
+  const gb=$('genBtn');
+  if(gb){gb.disabled=true;gb.innerHTML='<span class="spin"></span>Generating...';}
+
+  const steps=[[0,'Memulai AI engine...'],[300,'Menganalisa kebutuhanmu...'],[1200,'Merancang layout & struktur...'],[3000,'Menulis HTML, CSS, & JS...'],[5500,'Menambahkan animasi...'],[8500,'Memoles desain...'],[11500,'Hampir selesai...']];
+  let si=0;
+  const prog=c=>{
+    const pct=Math.min(95,Math.round(c/12000*95));
+    $('bFill').style.width=pct+'%';
+    st('bPct',pct+'%');
+    while(si<steps.length&&c>=steps[si][0]){st('bStat',steps[si][1]);si++;}
+  };
+
+  try{
+    const res=await fetch(`${BACKEND}/api/generate`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-SoraaAI-Key':S.key},
+      body:JSON.stringify({prompt,model:S.model,mode:'website',stream:true})
+    });
+    if(!res.ok){
+      let m='Generation gagal';
+      try{const e=await res.json();m=e.detail||m;}catch(_){}
+      throw new Error(m);
+    }
+
+    const rdr=res.body.getReader(), dec=new TextDecoder();
+    let buf='',chars=0,lp=0;
+
+    while(true){
+      const{done,value}=await rdr.read(); if(done) break;
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n'); buf=lines.pop();
+      for(const line of lines){
+        if(!line.startsWith('data: ')) continue;
+        const raw=line.slice(6);
+        if(raw==='[DONE]'){buf='';break;}
+        try{
+          const d=JSON.parse(raw);
+          if(d.error) throw new Error(d.error);
+          if(d.text){
+            S.html+=d.text; chars+=d.text.length; prog(chars);
+            if(chars-lp>80){
+              lp=chars;
+              const o=$('streamOut');
+              if(o){o.textContent=S.html;o.scrollTop=o.scrollHeight;}
+            }
+            if(chars%300<d.text.length&&S.html.includes('</body>')){
+              const f=$('liveFrame'); if(f) f.srcdoc=S.html;
+            }
+          }
+        }catch(e){if(e.message) throw e;}
+      }
+    }
+
+    $('bFill').style.width='100%'; st('bPct','100%');
+    st('bStat','✓ Website berhasil dibuat!');
+    $('streamOut').textContent=S.html;
+    if(S.html){
+      $('liveFrame').srcdoc=S.html;
+      $('vwBtn').style.display='flex';
+    }
+
+    /* Simpan ke Firestore */
+    if(S.user&&S.html){
+      try{
+        const title=(S.html.match(/<title>(.*?)<\/title>/i)||[])[1]||prompt.substring(0,40);
+        const pj={name:title,prompt,model:S.model,htmlCode:S.html,emoji:emo(prompt),createdAt:serverTimestamp()};
+        // Simpan ke sandai_users (primary) dan soraaai_users (backup)
+        let ref=null;
+        try{ ref=await addDoc(collection(db,'sandai_users',S.user.uid,'projects'),pj); }catch(_){
+          ref=await addDoc(collection(db,'soraaai_users',S.user.uid,'projects'),pj);
+        }
+        S.projs.unshift({id:ref.id,...pj,createdAt:{toDate:()=>new Date()}});
+        st('stProj',S.projs.length);
+        st('projCount',S.projs.length+' projects');
+        renderProjs();
+      }catch(e){console.warn('Save:',e.message);}
+    }
+
+    /* Update stats UI */
+    if(S.ki){
+      S.ki.requests_used=(S.ki.requests_used||0)+1;
+      S.ki.requests_remaining=Math.max(0,(S.ki.requests_remaining||500)-1);
+      st('kUsed',S.ki.requests_used);
+      st('kLeft',S.ki.requests_remaining);
+      st('stReq',S.ki.requests_used);
+    }
+    toast('🎉 Website berhasil dibuat!','success');
+
+  }catch(e){
+    console.error(e);
+    st('bStat','✗ '+e.message);
+    $('bFill').style.width='0%'; st('bPct','0%');
+    toast('Error: '+e.message,'error');
+  }finally{
+    S.busy=false;
+    if(gb){gb.disabled=false;gb.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Generate Website';}
+  }
+}
+
+/* ── VIEWWEB ── */
+function openVW(html,title,sub){
+  const h=html||S.html; if(!h) return;
+  const t=title||(h.match(/<title>(.*?)<\/title>/i)||[])[1]||'Preview';
+  $('vwFrame').srcdoc=h; st('vwN',t); st('vwS',sub||S.prompt||'');
+  $('vwModal').classList.add('on');
+}
+function closeVW(){ $('vwModal').classList.remove('on'); }
+
+/* ── PUBLIC API ── */
+window.APP={
+  show,
+  googleSignIn:async()=>{
+    const btn=$('googleBtn');
+    try{
+      if(btn){btn.disabled=true;btn.innerHTML='<span class="spin"></span>Masuk...';}
+      await signInWithPopup(auth,gPr);
+    }catch(e){
+      if(btn){btn.disabled=false;btn.innerHTML='<svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Masuk dengan Google';}
+      if(e.code!=='auth/popup-closed-by-user') toast('Login gagal: '+e.message,'error');
+    }
+  },
+  signOut:async()=>{
+    try{
+      await fbOut(auth);
+      Object.assign(S,{user:null,key:null,ki:null,projs:[],html:'',prompt:'',busy:false});
+      show('landingScreen'); toast('Berhasil keluar');
+    }catch(e){toast('Error keluar','error');}
+  },
+  setModel:(m,btn)=>{
+    S.model=m;
+    document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('on'));
+    if(btn) btn.classList.add('on');
+    st('mInd',m==='claude'?'Claude':'GPT-4o');
+  },
+  goBuilder:()=>{ S.html=''; show('builderScreen'); st('bStat','Tulis prompt di dashboard lalu tekan Generate.'); },
+  generate,
+  openViewWeb:()=>openVW(),
+  closeVW,
+  dlCurrent:()=>{ if(S.html) dl('sandai-website',S.html); else toast('Belum ada website','error'); },
+  copyKey:()=>{ if(S.key) navigator.clipboard.writeText(S.key).then(()=>toast('API key berhasil disalin!')); },
+  viewProj:(id)=>{ const p=S.projs.find(x=>x.id===id); if(p) openVW(p.htmlCode,p.name,p.prompt); },
+  dlProj:(id)=>{ const p=S.projs.find(x=>x.id===id); if(p) dl(p.name,p.htmlCode); }
+};
+
+/* Char count */
+setInterval(()=>{
+  const o=$('streamOut'),c=$('cChars');
+  if(o&&c) c.textContent=o.textContent.length.toLocaleString()+' chars';
+},500);
+
+/* Ctrl+Enter */
+$('promptIn')?.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)) generate();
+});
+</script>
+</body>
+</html>
